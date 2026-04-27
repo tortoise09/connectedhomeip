@@ -26,7 +26,7 @@ jobs:
       - name: Setup environment
         run: |
           cd connectedhomeip
-          source scripts/activate.sh
+          source scripts/activate.sh --disable-pigweed --no-bootstrap
 
       - name: Setup Android NDK
         run: |
