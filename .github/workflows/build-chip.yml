@@ -1,0 +1,55 @@
+name: Build CHIP Android SO
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git gcc g++ ninja-build python3 python3-pip unzip zip curl libssl-dev
+
+      - name: Clone CHIP
+        run: |
+          git clone https://github.com/project-chip/connectedhomeip.git
+          cd connectedhomeip
+          git submodule update --init --recursive
+
+      - name: Setup environment
+        run: |
+          cd connectedhomeip
+          source scripts/activate.sh
+
+      - name: Setup Android NDK
+        run: |
+          mkdir -p $HOME/android-sdk
+          cd $HOME/android-sdk
+          wget https://dl.google.com/android/repository/android-ndk-r25c-linux.zip
+          unzip android-ndk-r25c-linux.zip
+          echo "ANDROID_NDK_HOME=$HOME/android-sdk/android-ndk-r25c" >> $GITHUB_ENV
+
+      - name: Build CHIP
+        run: |
+          cd connectedhomeip
+          source scripts/activate.sh
+          gn gen out/android-arm64 --args='
+            target_os="android"
+            target_cpu="arm64"
+            android_ndk_root="'$ANDROID_NDK_HOME'"
+          '
+          ninja -C out/android-arm64
+
+      - name: Upload SO
+        uses: actions/upload-artifact@v4
+        with:
+          name: chip-so
+          path: |
+            connectedhomeip/out/android-arm64/libCHIPController.so
+            connectedhomeip/out/android-arm64/libc++_shared.so
