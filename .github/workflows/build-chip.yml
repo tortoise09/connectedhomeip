@@ -20,6 +20,7 @@ jobs:
         run: |
           git clone https://github.com/project-chip/connectedhomeip.git
           cd connectedhomeip
+          git checkout v1.5.1.0
           git submodule update --init --recursive
 
       - name: Setup environment
@@ -52,4 +53,5 @@ jobs:
           name: chip-so
           path: |
             connectedhomeip/out/android-arm64/libCHIPController.so
+            connectedhomeip/out/android-arm64/libSetupPayloadParser.so
             connectedhomeip/out/android-arm64/libc++_shared.so
