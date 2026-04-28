@@ -62,7 +62,9 @@ jobs:
           '
           # ninja -C out/android-arm64
           # ❗关键：只编 controller
-          ninja -C out/android-arm64 chip-controller
+          # ninja -C out/android-arm64 chip-controller
+          # ❗关键：只编 controller（绕开 root BUILD）
+          ninja -C out/android-arm64 //src/controller:chip-controller
 
       - name: Upload SO
         uses: actions/upload-artifact@v4
