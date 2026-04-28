@@ -77,6 +77,9 @@ jobs:
           # ❗关键2：不要用 activate.sh（避免自动脚本）
           # source scripts/activate.sh
           export CHIP_NO_ACTIVATE=1
+
+          # 修补 Java 依赖
+          sed -i '/src\/platform\/Linux/d' src/controller/java/BUILD.gn
                     
           gn gen out/android-arm64 --args='
             target_os="android"
