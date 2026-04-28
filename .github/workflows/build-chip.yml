@@ -49,6 +49,7 @@ jobs:
             target_os="android"
             target_cpu="arm64"
             android_ndk_root="'$ANDROID_NDK_HOME'"
+            matter_enable_java_compilation=false
           '
           ninja -C out/android-arm64
 
