@@ -67,6 +67,11 @@ jobs:
           unzip android-ndk-r25c-linux.zip
           echo "ANDROID_NDK_HOME=$HOME/android-sdk/android-ndk-r25c" >> $GITHUB_ENV
 
+      - name: Fetch Android deps
+        run: |
+          cd connectedhomeip
+          bash scripts/setup/android_deps.sh
+
       - name: Build CHIP
         run: |
           cd connectedhomeip
