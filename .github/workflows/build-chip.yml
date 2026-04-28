@@ -58,6 +58,7 @@ jobs:
             android_ndk_root="'$ANDROID_NDK_HOME'"
             matter_enable_java_compilation=false
             chip_build_tests=false
+            chip_build_controller_java=false
           '
           # ninja -C out/android-arm64
           # ❗关键：只编 controller
