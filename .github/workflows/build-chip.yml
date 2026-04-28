@@ -85,6 +85,7 @@ jobs:
             android_sdk_root="'$ANDROID_HOME'"
             matter_enable_java_compilation=true
             is_debug=false
+            chip_device_platform="android"
           '
           ninja -C out/android-arm64
           # ❗关键：只编 controller
