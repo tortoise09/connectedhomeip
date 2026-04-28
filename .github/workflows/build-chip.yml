@@ -33,6 +33,32 @@ jobs:
           cd connectedhomeip
           source scripts/activate.sh --disable-pigweed --no-bootstrap
 
+      # ✅ Java（必须）
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # ✅ Android SDK（必须）
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # 安装 NDK
+      - name: Install NDK
+        run: |
+          sdkmanager "ndk;26.1.10909125"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125" >> $GITHUB_ENV
+
+      # GN
+      - name: Install GN
+        run: |
+          git clone https://gn.googlesource.com/gn
+          cd gn
+          python3 build/gen.py
+          ninja -C out
+          echo "$PWD/out" >> $GITHUB_PATH
+        
       - name: Setup Android NDK
         run: |
           mkdir -p $HOME/android-sdk
@@ -56,15 +82,15 @@ jobs:
             target_os="android"
             target_cpu="arm64"
             android_ndk_root="'$ANDROID_NDK_HOME'"
-            matter_enable_java_compilation=false
-            chip_build_tests=false
-            chip_build_controller_java=false
+            android_sdk_root="'$ANDROID_HOME'"
+            matter_enable_java_compilation=true
+            is_debug=false
           '
-          # ninja -C out/android-arm64
+          ninja -C out/android-arm64
           # ❗关键：只编 controller
           # ninja -C out/android-arm64 chip-controller
           # ❗关键：只编 controller（绕开 root BUILD）
-          ninja -C out/android-arm64 //src/controller:chip-controller
+          # ninja -C out/android-arm64 //src/controller:chip-controller
 
       - name: Upload SO
         uses: actions/upload-artifact@v4
