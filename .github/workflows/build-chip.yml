@@ -59,7 +59,9 @@ jobs:
             matter_enable_java_compilation=false
             chip_build_tests=false
           '
-          ninja -C out/android-arm64
+          # ninja -C out/android-arm64
+          # ❗关键：只编 controller
+          ninja -C out/android-arm64 chip-controller
 
       - name: Upload SO
         uses: actions/upload-artifact@v4
