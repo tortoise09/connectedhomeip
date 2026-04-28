@@ -44,12 +44,20 @@ jobs:
       - name: Build CHIP
         run: |
           cd connectedhomeip
-          source scripts/activate.sh
+          
+          # ❗关键1：删除旧构建缓存
+          rm -rf out/android-arm64
+
+          # ❗关键2：不要用 activate.sh（避免自动脚本）
+          # source scripts/activate.sh
+          export CHIP_NO_ACTIVATE=1
+                    
           gn gen out/android-arm64 --args='
             target_os="android"
             target_cpu="arm64"
             android_ndk_root="'$ANDROID_NDK_HOME'"
             matter_enable_java_compilation=false
+            chip_build_tests=false
           '
           ninja -C out/android-arm64
 
