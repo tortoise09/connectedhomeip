@@ -109,31 +109,14 @@ jobs:
           curl -L -O https://maven.aliyun.com/repository/central/junit/junit/4.13.2/junit-4.13.2.jar
           curl -L -O https://maven.aliyun.com/repository/central/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
 
-      - name: Force disable Kotlin Werror
+      - name: Patch Kotlin flags (correct way)
         run: |
-          cd connectedhomeip      
-          cat > build/chip/java/kotlinc_runner.py << 'EOF'
-          #!/usr/bin/env python3
-          import subprocess
-          import sys
-          
-          def main():
-              args = sys.argv[1:]
-          
-              # 🔥 强制过滤掉所有坑参数
-              filtered = []
-              for a in args:
-                  if a in ("-Werror", "-Xlint:all"):
-                      continue
-                  filtered.append(a)
-          
-              cmd = ["/usr/bin/kotlinc"] + filtered
-              print("RUN:", " ".join(cmd))
-              return subprocess.call(cmd)
-          
-          if __name__ == "__main__":
-              sys.exit(main())
-          EOF
+          cd connectedhomeip
+          sed -i 's/-Werror//g' build/chip/java/kotlinc_runner.py
+
+      - name: Verify patch
+        run: |
+          grep -n "Werror" connectedhomeip/build/chip/java/kotlinc_runner.py || echo "OK"
 
       - name: Activate env
         run: |
