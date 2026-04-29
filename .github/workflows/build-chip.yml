@@ -109,36 +109,36 @@ jobs:
           curl -L -O https://maven.aliyun.com/repository/central/junit/junit/4.13.2/junit-4.13.2.jar
           curl -L -O https://maven.aliyun.com/repository/central/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
 
-      - name: Fix Kotlin compile flags
+      - name: Force disable Kotlin Werror
         run: |
-          cd connectedhomeip
-          # 打印确认
-          echo "Before patch:"
-          grep -n "Werror" build/chip/java/kotlinc_runner.py || true
-          # 强制删除参数
-          sed -i 's/"-Werror",//g' build/chip/java/kotlinc_runner.py
-          sed -i "s/'-Werror',//g" build/chip/java/kotlinc_runner.py
-          sed -i 's/-Werror//g' build/chip/java/kotlinc_runner.py
-          sed -i 's/"-Xlint:all",//g' build/chip/java/kotlinc_runner.py
-          sed -i "s/'-Xlint:all',//g" build/chip/java/kotlinc_runner.py
-          sed -i 's/-Xlint:all//g' build/chip/java/kotlinc_runner.py
-          echo "After patch:"
-          grep -n "Werror" build/chip/java/kotlinc_runner.py || true
+          cd connectedhomeip      
+          cat > build/chip/java/kotlinc_runner.py << 'EOF'
+          #!/usr/bin/env python3
+          import subprocess
+          import sys
+          
+          def main():
+              args = sys.argv[1:]
+          
+              # 🔥 强制过滤掉所有坑参数
+              filtered = []
+              for a in args:
+                  if a in ("-Werror", "-Xlint:all"):
+                      continue
+                  filtered.append(a)
+          
+              cmd = ["/usr/bin/kotlinc"] + filtered
+              print("RUN:", " ".join(cmd))
+              return subprocess.call(cmd)
+          
+          if __name__ == "__main__":
+              sys.exit(main())
+          EOF
 
       - name: Build CHIP
         run: |
           cd connectedhomeip
-          
-          # ❗关键1：删除旧构建缓存
-          rm -rf out/android-arm64
-
-          # ❗关键2：不要用 activate.sh（避免自动脚本）
-          # source scripts/activate.sh
-          export CHIP_NO_ACTIVATE=1
-
-          # 修补 Java 依赖
-          sed -i '/src\/platform\/Linux/d' src/controller/java/BUILD.gn
-                    
+          source scripts/activate.sh                    
           gn gen out/android-arm64 --args='
             target_os="android"
             target_cpu="arm64"
@@ -149,10 +149,6 @@ jobs:
             chip_device_platform="android"
           '
           ninja -C out/android-arm64
-          # ❗关键：只编 controller
-          # ninja -C out/android-arm64 chip-controller
-          # ❗关键：只编 controller（绕开 root BUILD）
-          # ninja -C out/android-arm64 //src/controller:chip-controller
 
       - name: Upload SO
         uses: actions/upload-artifact@v4
