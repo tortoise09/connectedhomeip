@@ -135,20 +135,44 @@ jobs:
               sys.exit(main())
           EOF
 
-      - name: Build CHIP
+      - name: Activate env
         run: |
           cd connectedhomeip
-          source scripts/activate.sh                    
+          # ❗关键2：不要用 activate.sh（避免自动脚本）
+          # source scripts/activate.sh
+          export CHIP_NO_ACTIVATE=1
+      
+      - name: Patch Kotlin flags
+        run: |
+          cd connectedhomeip
+          # 修补 Java 依赖
+          sed -i '/src\/platform\/Linux/d' src/controller/java/BUILD.gn
+      
+      - name: Build
+        run: |
+          cd connectedhomeip
           gn gen out/android-arm64 --args='
             target_os="android"
             target_cpu="arm64"
             android_ndk_root="'$ANDROID_NDK_HOME'"
-            android_sdk_root="'$ANDROID_HOME'"
-            matter_enable_java_compilation=true
-            is_debug=false
-            chip_device_platform="android"
+            android_sdk_root="'$ANDROID_SDK_ROOT'"
           '
-          ninja -C out/android-arm64
+          ninja -C out/android-arm64          
+
+      # - name: Build CHIP
+      #   run: |
+      #     cd connectedhomeip
+      #     source scripts/activate.sh                    
+      #     gn gen out/android-arm64 --args='
+      #       target_os="android"
+      #       target_cpu="arm64"
+      #       android_ndk_root="'$ANDROID_NDK_HOME'"
+      #       android_sdk_root="'$ANDROID_HOME'"
+      #       matter_enable_java_compilation=true
+      #       is_debug=false
+      #       chip_device_platform="android"
+      #     '
+      #     ninja -C out/android-arm64
 
       - name: Upload SO
         uses: actions/upload-artifact@v4
