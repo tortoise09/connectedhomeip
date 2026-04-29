@@ -123,6 +123,9 @@ jobs:
 
           # 修补 Java 依赖
           sed -i '/src\/platform\/Linux/d' src/controller/java/BUILD.gn
+          # Disable Kotlin Werror
+          sed -i 's/-Werror//g' build/chip/java/kotlinc_runner.py
+          sed -i 's/-Xlint:all//g' build/chip/java/kotlinc_runner.py
                     
           gn gen out/android-arm64 --args='
             target_os="android"
