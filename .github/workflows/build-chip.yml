@@ -74,12 +74,18 @@ jobs:
           cd third_party/android_deps/artifacts
           # annotation
           wget https://maven.aliyun.com/repository/google/androidx/annotation/annotation/1.1.0/annotation-1.1.0.jar
-          # jsr305（常见依赖）
-          wget https://maven.aliyun.com/repository/central/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar
+
+      - name: Prepare java_deps
+        run: |
+          cd connectedhomeip
+          mkdir -p third_party/java_deps/artifacts
+          cd third_party/java_deps/artifacts
+          # jsr305（当前报错）
+          curl -L -O https://maven.aliyun.com/repository/central/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar
           # guava
-          wget https://maven.aliyun.com/repository/central/com/google/guava/guava/31.1-android/guava-31.1-android.jar
+          curl -L -O https://maven.aliyun.com/repository/central/com/google/guava/guava/31.1-android/guava-31.1-android.jar
           # checker annotations
-          wget https://maven.aliyun.com/repository/central/org/checkerframework/checker-qual/3.12.0/checker-qual-3.12.0.jar
+          curl -L -O https://maven.aliyun.com/repository/central/org/checkerframework/checker-qual/3.12.0/checker-qual-3.12.0.jar
 
       - name: Build CHIP
         run: |
