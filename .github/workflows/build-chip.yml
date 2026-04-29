@@ -86,6 +86,8 @@ jobs:
           curl -L -O https://maven.aliyun.com/repository/central/com/google/guava/guava/31.1-android/guava-31.1-android.jar
           # checker annotations
           curl -L -O https://maven.aliyun.com/repository/central/org/checkerframework/checker-qual/3.12.0/checker-qual-3.12.0.jar
+          # error
+          curl -L -O https://maven.aliyun.com/repository/central/com/google/errorprone/error_prone_annotations/2.11.0/error_prone_annotations-2.11.0.jar
 
       - name: Build CHIP
         run: |
