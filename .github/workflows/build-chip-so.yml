@@ -35,12 +35,12 @@ jobs:
 
       - name: Initialize Bootstrap
         run: |
-          # 彻底删除旧的环境生成目录，强制重新触发 Python 依赖解析
+          # 彻底删除 Pigweed 自动生成的环境目录
           rm -rf .environment          
-          # 提高环境初始化脚本的权限（可选）
-          chmod +x scripts/activate.sh          
-          # 禁用系统 Python 包的干扰
-          export PIP_BREAK_SYSTEM_PACKAGES=1          
+          # 设置环境变量，强制重新解析依赖
+          export PW_ENVSETUP_FORCE_REBOOTSTRAP=1
+          # 允许在受限环境下安装包
+          export PIP_BREAK_SYSTEM_PACKAGES=1
           # 激活 Matter 构建环境
           source scripts/activate.sh
 
