@@ -13,14 +13,8 @@
 # limitations under the License.
 
 name: Build example - NXP
-
 on:
-    push:
-        branches:
-            - master
-            - "v*-branch"
-    pull_request:
-    merge_group:
+    workflow_dispatch:
 
 concurrency:
     group:
