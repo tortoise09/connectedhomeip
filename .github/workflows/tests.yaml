@@ -13,27 +13,8 @@
 # limitations under the License.
 
 name: Tests
-
 on:
-    push:
-        branches:
-            - master
-            - 'v*-branch'
-    pull_request:
-    merge_group:
     workflow_dispatch:
-        inputs:
-            disable_ccache:
-                description: 'Disable ccache restore and builds (sets CCACHE_DISABLE=1)'
-                required: false
-                default: 'false'
-                type: choice
-                options: ['false', 'true']
-            cache_suffix:
-                description: 'Optional suffix appended to ccache key to rotate (e.g. short hash)'
-                required: false
-                default: ''
-                type: string
 
 concurrency:
     group: ${{ github.ref }}-${{ github.workflow }}-${{ (github.event_name == 'pull_request' && github.event.number) || (github.event_name == 'workflow_dispatch' && github.run_number) || github.sha }}
