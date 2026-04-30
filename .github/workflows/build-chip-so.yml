@@ -21,14 +21,17 @@ jobs:
       - name: Build Libraries
         shell: bash  # <--- 强制指定使用 bash，解决 source not found 问题
         run: |
-          # 1. 在官方容器中初始化环境（通常极快且无冲突）
+          # 1. 解决 Git 目录所有权限制 (关键修复)
+          git config --global --add safe.directory /__w/connectedhomeip/connectedhomeip
+          
+          # 2. 初始化环境
           source scripts/activate.sh
           
-          # 2. 生成 GN 配置 (针对 arm64)
+          # 3. 生成 GN 配置 (针对 arm64)
           # 注意：官方镜像中 ANDROID_NDK_HOME 通常已内置
           gn gen out/android-arm64 --args='target_os="android" target_cpu="arm64" android_linkflags="-Wl,-z,max-page-size=16384"'
           
-          # 3. 编译你需要的两个特定 so
+          # 4. 编译你需要的两个特定 so
           ninja -C out/android-arm64 libCHIPController libSetupPayloadParser
 
       - name: Upload Artifacts
