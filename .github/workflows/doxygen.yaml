@@ -13,67 +13,9 @@
 # limitations under the License.
 
 name: Doxygen
-
 on:
-    push:
-        branches:
-            - master
-            - 'v*-branch'
-        paths:
-            - "**.do[xc]"
-            - "**.c[cs]?"
-            - "**.cxx"
-            - "**.cpp"
-            - "**.c\\+\\+"
-            - "**.ii"
-            - "**.ixx"
-            - "**.ipp"
-            - "**.i\\+\\+"
-            - "**.inl"
-            - "**.[hH]"
-            - "**.hh"
-            - "**.HH"
-            - "**.hxx"
-            - "**.hpp"
-            - "**.h\\+\\+"
-            - "**.mm"
-            - "**.txt"
-            - "**.[ido]dl"
-            - "**.java"
-            - "**.d"
-            - "**.php[45]?"
-            - "**.inc"
-            - "**.phtml"
-            - "**.[mM]"
-    pull_request:
-        paths:
-            - "**.do[xc]"
-            - "**.c[cs]?"
-            - "**.cxx"
-            - "**.cpp"
-            - "**.c\\+\\+"
-            - "**.ii"
-            - "**.ixx"
-            - "**.ipp"
-            - "**.i\\+\\+"
-            - "**.inl"
-            - "**.[hH]"
-            - "**.hh"
-            - "**.HH"
-            - "**.hxx"
-            - "**.hpp"
-            - "**.h\\+\\+"
-            - "**.mm"
-            - "**.txt"
-            - "**.[ido]dl"
-            - "**.java"
-            - "**.d"
-            - "**.php[45]?"
-            - "**.inc"
-            - "**.phtml"
-            - "**.[mM]"
     workflow_dispatch:
-
+    
 concurrency:
     group: ${{ github.ref }}-${{ github.workflow }}-${{ (github.event_name == 'pull_request' && github.event.number) || (github.event_name == 'workflow_dispatch' && github.run_number) || github.sha }}
     cancel-in-progress: true
