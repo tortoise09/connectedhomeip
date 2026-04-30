@@ -44,18 +44,23 @@ jobs:
       - name: Generate GN Config & Build
         run: |
           source scripts/activate.sh
-          
-          # 设置目标架构，这里以 arm64 为例，如果需要 armv7a 请更改为 'arm'
-          TARGET_CPU="arm64"
-          
-          # 使用 GN 生成构建目录
-          # 我们指定构建目标为 android
-          gn gen out/android-$TARGET_CPU --args="target_os=\"android\" target_cpu=\"$TARGET_CPU\" android_ndk_root=\"$ANDROID_NDK_HOME\""
+          # 使用官方脚本编译 android 平台的库
+          ./scripts/build/build_examples.py \
+            --target android-arm64-chip-tool \
+            build
 
-          # 编译指定的动态库
-          # libCHIPController 对应的是 chip-jni
-          # libSetupPayloadParser 对应的是 setup_payload
-          ninja -C out/android-$TARGET_CPU libCHIPController libSetupPayloadParser
+            
+          # # 设置目标架构，这里以 arm64 为例，如果需要 armv7a 请更改为 'arm'
+          # TARGET_CPU="arm64"
+          
+          # # 使用 GN 生成构建目录
+          # # 我们指定构建目标为 android
+          # gn gen out/android-$TARGET_CPU --args="target_os=\"android\" target_cpu=\"$TARGET_CPU\" android_ndk_root=\"$ANDROID_NDK_HOME\""
+
+          # # 编译指定的动态库
+          # # libCHIPController 对应的是 chip-jni
+          # # libSetupPayloadParser 对应的是 setup_payload
+          # ninja -C out/android-$TARGET_CPU libCHIPController libSetupPayloadParser
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
