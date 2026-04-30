@@ -1,10 +1,6 @@
 name: Build Matter Android Libraries
 
 on:
-  push:
-    branches: [ master, main ]
-  pull_request:
-    branches: [ master, main ]
   workflow_dispatch:
 
 jobs:
@@ -16,11 +12,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          fetch-depth: 0 # 某些构建脚本需要完整的 Git 历史来确定版本号
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.10.x'
 
       - name: Install System Dependencies
         run: |
@@ -38,6 +35,12 @@ jobs:
 
       - name: Initialize Bootstrap
         run: |
+          # 彻底删除旧的环境生成目录，强制重新触发 Python 依赖解析
+          rm -rf .environment          
+          # 提高环境初始化脚本的权限（可选）
+          chmod +x scripts/activate.sh          
+          # 禁用系统 Python 包的干扰
+          export PIP_BREAK_SYSTEM_PACKAGES=1          
           # 激活 Matter 构建环境
           source scripts/activate.sh
 
