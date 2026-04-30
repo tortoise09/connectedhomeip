@@ -1,84 +1,66 @@
-name: Build CHIP Android SO1
+name: Build Matter Android Libraries
 
 on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
+  build-android:
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Install deps
-      run: |
-        sudo apt update
-        sudo apt install -y git gcc g++ pkg-config ninja-build python3 python3-pip unzip zip curl libssl-dev
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-    - name: Setup Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binutils-dev libgflags-dev libsqlite3-dev \
+            ninja-build generate-ninja npm nodejs
 
-    # ✅ 安装 Android NDK
-    - name: Setup Android NDK
-      run: |
-        mkdir -p $HOME/android-sdk
-        cd $HOME/android-sdk
-        wget -q https://dl.google.com/android/repository/android-ndk-r25c-linux.zip
-        unzip -q android-ndk-r25c-linux.zip
-        echo "ANDROID_NDK_HOME=$HOME/android-sdk/android-ndk-r25c" >> $GITHUB_ENV
+      - name: Install Android NDK
+        run: |
+          # 建议使用项目要求的 NDK 版本，此处以 r25b 为例
+          mkdir -p $HOME/android-sdk/ndk
+          wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
+          unzip -q android-ndk-r25b-linux.zip -d $HOME/android-sdk/ndk
+          echo "ANDROID_NDK_HOME=$HOME/android-sdk/ndk/android-ndk-r25b" >> $GITHUB_ENV
 
-    - name: Clone CHIP
-      run: |
-        git clone https://github.com/project-chip/connectedhomeip.git
-        cd connectedhomeip
-        git checkout v1.5.1.0
-        git submodule update --init --recursive
+      - name: Initialize Bootstrap
+        run: |
+          # 激活 Matter 构建环境
+          source scripts/activate.sh
 
-    # ✅ 初始化环境（必须）
-    - name: Activate build env
-      run: |
-        cd connectedhomeip
-        source scripts/activate.sh
+      - name: Generate GN Config & Build
+        run: |
+          source scripts/activate.sh
+          
+          # 设置目标架构，这里以 arm64 为例，如果需要 armv7a 请更改为 'arm'
+          TARGET_CPU="arm64"
+          
+          # 使用 GN 生成构建目录
+          # 我们指定构建目标为 android
+          gn gen out/android-$TARGET_CPU --args="target_os=\"android\" target_cpu=\"$TARGET_CPU\" android_ndk_root=\"$ANDROID_NDK_HOME\""
 
-    # 🚫 关键：彻底关闭 Java / Kotlin 编译
-    - name: Disable Java build (avoid all Kotlin issues)
-      run: |
-        cd connectedhomeip
+          # 编译指定的动态库
+          # libCHIPController 对应的是 chip-jni
+          # libSetupPayloadParser 对应的是 setup_payload
+          ninja -C out/android-$TARGET_CPU libCHIPController libSetupPayloadParser
 
-        # 1️⃣ 禁用 Java 相关 GN 引用
-        sed -i '/src\/controller\/java/d' BUILD.gn
-        sed -i '/src\/app\/server\/java/d' BUILD.gn
-
-        # 2️⃣ 防止 rules.gni assert
-        sed -i 's/assert(android_sdk_root.*/# disabled/g' build/chip/java/rules.gni
-
-    # 🚀 编译 Android arm64 so
-    - name: Build Android arm64
-      run: |
-        cd connectedhomeip
-
-        gn gen out/android-arm64 --args='
-          target_os="android"
-          target_cpu="arm64"
-          android_ndk_root="'$ANDROID_NDK_HOME'"
-          is_debug=false
-          chip_build_tests=false
-          chip_build_examples=false
-        '
-
-        ninja -C out/android-arm64
-
-    # 📦 输出 so
-    - name: Collect .so
-      run: |
-        mkdir -p output
-        find connectedhomeip/out/android-arm64 -name "*.so" -exec cp {} output/ \;
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: chip-android-so
-        path: output/
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: matter-android-libs
+          path: |
+            out/android-arm64/lib/libCHIPController.so
+            out/android-arm64/lib/libSetupPayloadParser.so
