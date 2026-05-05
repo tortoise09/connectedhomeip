@@ -23,12 +23,15 @@ jobs:
         run: |
           set -e
           
+          echo "===== git config ====="
           # 1. 解决 Git 目录所有权限制 (关键修复)
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          
+
+          echo "===== BEFORE BOOTSTRAP ====="
           # 1. 初始化
           source scripts/bootstrap.sh
           
+          echo "===== BEFORE ACTIVATE ====="
           # 2. 🔥 强制加载 Pigweed 环境（关键！！！）
           source .environment/activate.sh
 
