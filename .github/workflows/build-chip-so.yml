@@ -26,17 +26,33 @@ jobs:
           echo "===== git config ====="
           # 1. 解决 Git 目录所有权限制 (关键修复)
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          
+          echo "==== DEBUG PYTHON0 ===="
+          which python3
+          python3 --version
+          echo "======================"
+          
+          unset PYTHONHOME
+          unset PYTHONPATH
+          
+          export PW_BOOTSTRAP_PYTHON=$(which python3)
 
           echo "===== BEFORE BOOTSTRAP ====="
           # 1. 初始化
           source scripts/bootstrap.sh
+          
+          # 验证python版本
+          echo "==== DEBUG PYTHON1 ===="
+          which python3
+          python3 --version
+          echo "======================"
           
           echo "===== BEFORE ACTIVATE ====="
           # 2. 🔥 强制加载 Pigweed 环境（关键！！！）
           source .environment/activate.sh
 
           # 验证python版本
-          echo "==== DEBUG PYTHON ===="
+          echo "==== DEBUG PYTHON2 ===="
           which python3
           python3 --version
           echo "======================"
