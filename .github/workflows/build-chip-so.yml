@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     # 核心：直接使用官方提供的 Android 编译环境镜像
     container:
       image: ghcr.io/project-chip/chip-build-android:35
