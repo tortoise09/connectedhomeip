@@ -27,15 +27,14 @@ jobs:
           # 1. 解决 Git 目录所有权限制 (关键修复)
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           
-          echo "==== DEBUG PYTHON0 ===="
-          which python3
+          echo "===== BEFORE ====="
           python3 --version
-          echo "======================"
-          
-          unset PYTHONHOME
-          unset PYTHONPATH
-          
-          export PW_BOOTSTRAP_PYTHON=$(which python3)
+          # 安装 Python 3.10（关键）
+          apt update
+          apt install -y python3.10 python3.10-venv python3.10-distutils
+          update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+          echo "===== AFTER INSTALL ====="
+          python3 --version
 
           echo "===== BEFORE BOOTSTRAP ====="
           # 1. 初始化
