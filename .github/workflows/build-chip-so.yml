@@ -18,6 +18,11 @@ jobs:
           submodules: recursive
           fetch-depth: 1
 
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
       - name: Build Libraries
         shell: bash  # <--- 强制指定使用 bash，解决 source not found 问题
         run: |
