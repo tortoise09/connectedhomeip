@@ -6,21 +6,35 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    
+    env:
+      CHIP_VERSION: v1.5.1.0
+      NDK_VERSION: 25.2.9519653
 
     steps:
       - uses: actions/checkout@v4
 
+      # ✅ 1. 缓存源码（含 submodule）
+      - name: Cache CHIP source
+        uses: actions/cache@v4
+        with:
+          path: connectedhomeip
+          key: chip-src-${{ env.CHIP_VERSION }}
+
+      - name: Clone CHIP (if needed)
+        run: |
+          if [ ! -d "connectedhomeip" ]; then
+            git clone https://github.com/project-chip/connectedhomeip.git
+            cd connectedhomeip
+            git checkout $CHIP_VERSION
+            git submodule update --init --recursive
+          fi
+
+      # ✅ 2. 基础依赖（很快）
       - name: Install deps
         run: |
           sudo apt update
           sudo apt install -y git gcc g++ ninja-build python3 python3-pip unzip curl
-
-      - name: Clone CHIP
-        run: |
-          git clone https://github.com/project-chip/connectedhomeip.git
-          cd connectedhomeip
-          git checkout v1.5.1.0
-          git submodule update --init --recursive
 
       # ✅ 先装 JDK（必须在最前）
       - name: Setup JDK
@@ -29,26 +43,51 @@ jobs:
           distribution: temurin
           java-version: 17
           
-      # Android SDK + NDK
+      # ✅ 4. Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install NDK
-        run: |
-          sdkmanager "ndk;25.2.9519653"
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> $GITHUB_ENV
+      # ✅ 5. 缓存 NDK（关键加速点）
+      - name: Cache Android NDK
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.ANDROID_HOME }}/ndk
+          key: android-ndk-${{ env.NDK_VERSION }}
 
-      # GN（自己编译，避免 CIPD）
-      - name: Install GN
+      - name: Install NDK (if needed)
         run: |
-          git clone https://gn.googlesource.com/gn
-          cd gn
-          python3 build/gen.py
-          ninja -C out
-          echo "$PWD/out" >> $GITHUB_PATH
+          if [ ! -d "$ANDROID_HOME/ndk/${NDK_VERSION}" ]; then
+            sdkmanager "ndk;${NDK_VERSION}"
+          fi
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/${NDK_VERSION}" >> $GITHUB_ENV
 
-      # ❗关键：禁用 Java 编译
-      - name: Build
+      # ✅ 6. 缓存 GN
+      - name: Cache GN
+        uses: actions/cache@v4
+        with:
+          path: gn-out
+          key: gn-v1
+
+      - name: Build GN (if needed)
+        run: |
+          if [ ! -d "gn-out" ]; then
+            git clone https://gn.googlesource.com/gn
+            cd gn
+            python3 build/gen.py
+            ninja -C out
+            cp -r out ../gn-out
+          fi
+          echo "$PWD/gn-out" >> $GITHUB_PATH
+
+      # ✅ 7. 缓存 build（命中后直接秒编）
+      - name: Cache build
+        uses: actions/cache@v4
+        with:
+          path: connectedhomeip/out
+          key: chip-build-${{ runner.os }}-${{ env.CHIP_VERSION }}
+
+      # ✅ 8. 构建（无 Java / 无 CIPD）
+      - name: Build CHIP SO
         run: |
           cd connectedhomeip
 
@@ -58,16 +97,17 @@ jobs:
             android_ndk_root="'$ANDROID_NDK_HOME'"
             is_debug=false
 
-            # 🔥 关键：关闭 Java/Kotlin
+            # 🔥 关键：关闭 Java/Kotlin（避免编译报错）
             matter_enable_java_compilation=false
 
-            # 🔥 关键：避免一堆平台依赖
+            # 🔥 避免复杂平台依赖
             chip_device_platform="linux"
             android_linkflags="-Wl,-z,max-page-size=16384"
           '
 
           ninja -C out/android-arm64
-
+          
+      # ✅ 9. 上传结果
       - name: Upload SO
         uses: actions/upload-artifact@v4
         with:
