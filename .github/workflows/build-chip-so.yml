@@ -1,72 +1,74 @@
-name: Build Matter Android Libraries
+name: Build CHIP Android SO (Minimal)
 
 on:
-  workflow_dispatch: # 方便你手动触发测试
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-22.04
-    # 核心：直接使用官方提供的 Android 编译环境镜像
-    container:
-      image: ghcr.io/project-chip/chip-build-android:35
-      options: --user root
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          fetch-depth: 1
+      - uses: actions/checkout@v4
 
-      - name: Build Libraries
-        shell: bash  # <--- 强制指定使用 bash，解决 source not found 问题
+      - name: Install deps
         run: |
-          set -e
-          
-          echo "===== git config ====="
-          # 1. 解决 Git 目录所有权限制 (关键修复)
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          
-          echo "===== BEFORE ====="
-          python3 --version
-          # 安装 Python 3.10（关键）
-          apt update
-          apt install -y python3.10 python3.10-venv python3.10-distutils
-          update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
-          echo "===== AFTER INSTALL ====="
-          python3 --version
+          sudo apt update
+          sudo apt install -y git gcc g++ ninja-build python3 python3-pip unzip curl
 
-          echo "===== BEFORE BOOTSTRAP ====="
-          # 1. 初始化
-          source scripts/bootstrap.sh
-          
-          # 验证python版本
-          echo "==== DEBUG PYTHON1 ===="
-          which python3
-          python3 --version
-          echo "======================"
-          
-          echo "===== BEFORE ACTIVATE ====="
-          # 2. 🔥 强制加载 Pigweed 环境（关键！！！）
-          source .environment/activate.sh
+      - name: Clone CHIP
+        run: |
+          git clone https://github.com/project-chip/connectedhomeip.git
+          cd connectedhomeip
+          git checkout v1.5.1.0
+          git submodule update --init --recursive
 
-          # 验证python版本
-          echo "==== DEBUG PYTHON2 ===="
-          which python3
-          python3 --version
-          echo "======================"
-          
-          # 3. 生成 GN 配置 (针对 arm64)
-          # 注意：官方镜像中 ANDROID_NDK_HOME 通常已内置
-          gn gen out/android-arm64 --args='target_os="android" target_cpu="arm64" android_linkflags="-Wl,-z,max-page-size=16384"'
-          
-          # 4. 编译你需要的两个特定 so
-          ninja -C out/android-arm64 libCHIPController libSetupPayloadParser
+      # ❗ 不用 bootstrap，不用 CIPD
+      - name: Disable Pigweed/CIPD
+        run: |
+          echo "PW_NO_CIPD=1" >> $GITHUB_ENV
+          echo "CHIP_NO_ESP32=1" >> $GITHUB_ENV
 
-      - name: Upload Artifacts
+      # Android SDK + NDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK
+        run: |
+          sdkmanager "ndk;25.2.9519653"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> $GITHUB_ENV
+
+      # GN（自己编译，避免 CIPD）
+      - name: Install GN
+        run: |
+          git clone https://gn.googlesource.com/gn
+          cd gn
+          python3 build/gen.py
+          ninja -C out
+          echo "$PWD/out" >> $GITHUB_PATH
+
+      # ❗关键：禁用 Java 编译
+      - name: Build
+        run: |
+          cd connectedhomeip
+
+          gn gen out/android-arm64 --args='
+            target_os="android"
+            target_cpu="arm64"
+            android_ndk_root="'$ANDROID_NDK_HOME'"
+            is_debug=false
+
+            # 🔥 关键：关闭 Java/Kotlin
+            matter_enable_java_compilation=false
+
+            # 🔥 关键：避免一堆平台依赖
+            chip_device_platform="linux"
+          '
+
+          ninja -C out/android-arm64
+
+      - name: Upload SO
         uses: actions/upload-artifact@v4
         with:
-          name: matter-android-libs
+          name: chip-so
           path: |
-            out/android-arm64/lib/libCHIPController.so
-            out/android-arm64/lib/libSetupPayloadParser.so
+            connectedhomeip/out/android-arm64/*.so
