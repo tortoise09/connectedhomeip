@@ -61,23 +61,13 @@ jobs:
           fi
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/${NDK_VERSION}" >> $GITHUB_ENV
 
-      # ✅ 6. 缓存 GN
-      - name: Cache GN
-        uses: actions/cache@v4
-        with:
-          path: gn-out
-          key: gn-v1
-
-      - name: Build GN (if needed)
+      # ✅ 6. 安装 GN
+      - name: Install GN (prebuilt)
         run: |
-          if [ ! -d "gn-out" ]; then
-            git clone https://gn.googlesource.com/gn
-            cd gn
-            python3 build/gen.py
-            ninja -C out
-            cp -r out ../gn-out
-          fi
-          echo "$PWD/gn-out" >> $GITHUB_PATH
+          curl -L -o gn.zip https://chrome-infra-packages.appspot.com/dl/gn/gn/linux-amd64/+/latest
+          unzip gn.zip -d gn-bin
+          chmod +x gn-bin/gn
+          echo "$PWD/gn-bin" >> $GITHUB_PATH
 
       # ✅ 7. 缓存 build（命中后直接秒编）
       - name: Cache build
