@@ -22,12 +22,13 @@ jobs:
           git checkout v1.5.1.0
           git submodule update --init --recursive
 
-      # ❗ 不用 bootstrap，不用 CIPD
-      - name: Disable Pigweed/CIPD
-        run: |
-          echo "PW_NO_CIPD=1" >> $GITHUB_ENV
-          echo "CHIP_NO_ESP32=1" >> $GITHUB_ENV
-
+      # ✅ 先装 JDK（必须在最前）
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          
       # Android SDK + NDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
