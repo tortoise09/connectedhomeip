@@ -79,6 +79,7 @@ jobs:
       - name: Build CHIP SO
         run: |
           cd connectedhomeip
+          sed -i '/src\/app\/server\/java/d' BUILD.gn
 
           gn gen out/android-arm64 --args='
             target_os="android"
