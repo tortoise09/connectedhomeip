@@ -62,6 +62,7 @@ jobs:
 
             # 🔥 关键：避免一堆平台依赖
             chip_device_platform="linux"
+            android_linkflags="-Wl,-z,max-page-size=16384"
           '
 
           ninja -C out/android-arm64
