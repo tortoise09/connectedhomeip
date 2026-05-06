@@ -69,12 +69,11 @@ jobs:
           chmod +x gn-bin/gn
           echo "$PWD/gn-bin" >> $GITHUB_PATH
 
-      # ✅ 7. 缓存 build（命中后直接秒编）
-      - name: Cache build
-        uses: actions/cache@v4
-        with:
-          path: connectedhomeip/out
-          key: chip-build-${{ runner.os }}-${{ env.CHIP_VERSION }}
+      - name: Disable Pigweed (stub file)
+        run: |
+          cd connectedhomeip
+          mkdir -p build_overrides
+          echo "# dummy pigweed env" > build_overrides/pigweed_environment.gni
 
       # ✅ 8. 构建（无 Java / 无 CIPD）
       - name: Build CHIP SO
@@ -92,6 +91,12 @@ jobs:
 
             # 🔥 避免复杂平台依赖
             chip_device_platform="linux"
+            
+            # 🔥 关键：关闭 Pigweed 相关
+            chip_build_tests=false
+            chip_build_fuzz_tests=false
+            pw_build_PIGWEED_CIPD_INSTALL=false
+              
             android_linkflags="-Wl,-z,max-page-size=16384"
           '
 
