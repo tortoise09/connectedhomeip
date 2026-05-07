@@ -103,7 +103,7 @@ jobs:
       - name: List targets
         run: |
           cd connectedhomeip
-          gn ls out/android-arm64 ////src/controller/java/*
+          gn ls out/android-arm64 '//src/controller/java/*'
 
       # ✅ 8. 构建（无 Java / 无 CIPD）
       - name: Build CHIP SO
@@ -131,10 +131,10 @@ jobs:
             # 🔥 关键：关闭 Pigweed 相关
             chip_build_tests=false
             # chip_build_fuzz_tests=false
-            is_component_build=true
+            # is_component_build=true
           '
 
-          ninja -C out/android-arm64 //src/controller/java:CHIPController
+          ninja -C out/android-arm64 '//src/controller/java:CHIPController'
 
       - name: Find SO
         run: |
