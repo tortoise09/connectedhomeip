@@ -136,7 +136,7 @@ jobs:
             # is_component_build=true
           '
 
-          ninja -C out/android-arm64 //src/platform/android:android
+          ninja -C out/android-arm64 src/platform/android:android
 
       - name: Find SO
         run: |
