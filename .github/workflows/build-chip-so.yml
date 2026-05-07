@@ -119,6 +119,8 @@ jobs:
           # cp BUILD.gn BUILD.gn.bak
           # grep -v "java" BUILD.gn.bak > BUILD.gn
 
+          sed -i 's/-Werror//g' build/chip/java/kotlinc_runner.py
+
           gn gen out/android-arm64 --args='
             target_os="android"
             target_cpu="arm64"
@@ -127,7 +129,7 @@ jobs:
             is_debug=false
 
             # 🔥 关键：关闭 Java/Kotlin（避免编译报错）
-            matter_enable_java_compilation=false
+            matter_enable_java_compilation=true
             chip_device_platform="android"
             
             # 🔥 关键：关闭 Pigweed 相关
@@ -136,34 +138,7 @@ jobs:
             # is_component_build=true
           '
 
-          ninja -C out/android-arm64 src/platform/android:android
-
-      - name: Link shared library
-        run: |
-          cd connectedhomeip
-          CLANG=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++
-          $CLANG \
-            -shared \
-            -o out/android-arm64/libCHIPController.so \
-            -Wl,--whole-archive \
-            out/android-arm64/obj/src/controller/lib/libChipController.a \
-            out/android-arm64/lib/libCHIP.a \
-            out/android-arm64/obj/src/platform/android/lib/libAndroidPlatform.a \
-            out/android-arm64/obj/src/system/lib/libSystemLayer.a \
-            out/android-arm64/obj/src/messaging/lib/libMessagingLayer.a \
-            out/android-arm64/obj/src/inet/lib/libInetLayer.a \
-            out/android-arm64/obj/src/transport/lib/libTransportLayer.a \
-            out/android-arm64/obj/src/crypto/lib/libChipCrypto.a \
-            out/android-arm64/obj/src/lib/core/lib/libChipCore.a \
-            out/android-arm64/obj/src/lib/support/lib/libSupportLayer.a \
-            out/android-arm64/obj/src/setup_payload/lib/libSetupPayload.a \
-            out/android-arm64/obj/src/credentials/lib/libCredentials.a \
-            out/android-arm64/obj/src/protocols/lib/libChipProtocols.a \
-            -Wl,--no-whole-archive \
-            -llog \
-            -landroid \
-            -lz \
-            -lm
+          ninja -C out/android-arm64 CHIPController SetupPayloadParser
 
       - name: Find SO
         run: |
@@ -178,4 +153,6 @@ jobs:
         with:
           name: chip-so
           path: |
-            connectedhomeip/out/**/*.so
+            connectedhomeip/out/android-arm64/lib/jni/arm64-v8a/libCHIPController.so
+            connectedhomeip/out/android-arm64/lib/jni/arm64-v8a/libSetupPayloadParser.so
+            connectedhomeip/out/android-arm64/lib/jni/arm64-v8a/libc++_shared.so
