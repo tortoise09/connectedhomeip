@@ -103,7 +103,7 @@ jobs:
       - name: Check targets
         run: |
           cd connectedhomeip
-          gn ls out/android-arm64 | grep CHIPController
+          gn ls out/android-arm64 "//src/controller/java/*"
 
       # ✅ 8. 构建（无 Java / 无 CIPD）
       - name: Build CHIP SO
