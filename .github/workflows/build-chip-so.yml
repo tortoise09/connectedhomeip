@@ -83,6 +83,8 @@ jobs:
           echo "----------1"
           # 注释 java/rules.gni
           sed -i 's|import("${chip_root}/build/chip/java/rules.gni")|# removed java rules|g' src/platform/android/BUILD.gn
+          sed -i '/android_sdk_root must be specified/d' build/chip/java/rules.gni
+          sed -i '/assert(android_sdk_root/d' build/chip/java/rules.gni
 
           echo "----------2"
           # 把所有包含 java 的行删掉
