@@ -113,7 +113,7 @@ jobs:
           cd connectedhomeip
 
           # 注释 assert
-          sed -i 's/assert(android_sdk_root != "" || matter_enable_java_compilation,/if (false)/g' build/chip/java/rules.gni
+          # sed -i 's/assert(android_sdk_root != "" || matter_enable_java_compilation,/if (false)/g' build/chip/java/rules.gni
 
           # 把所有包含 java 的行删掉
           # cp BUILD.gn BUILD.gn.bak
@@ -136,7 +136,7 @@ jobs:
             # is_component_build=true
           '
 
-          ninja -C out/android-arm64
+          ninja -C out/android-arm64 //src/platform/android:android
 
       - name: Find SO
         run: |
