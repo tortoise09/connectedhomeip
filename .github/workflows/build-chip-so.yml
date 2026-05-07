@@ -79,7 +79,10 @@ jobs:
       - name: Build CHIP SO
         run: |
           cd connectedhomeip
-          sed -i '/src\/app\/server\/java/d' BUILD.gn
+
+          # 把所有包含 java 的行删掉
+          cp BUILD.gn BUILD.gn.bak
+          grep -v "java" BUILD.gn.bak > BUILD.gn
 
           gn gen out/android-arm64 --args='
             target_os="android"
