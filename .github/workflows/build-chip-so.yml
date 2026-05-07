@@ -80,10 +80,16 @@ jobs:
         run: |
           cd connectedhomeip
 
+          echo "----------1"
+          # 注释 java/rules.gni
+          sed -i 's|import("${chip_root}/build/chip/java/rules.gni")|# removed java rules|g' src/platform/android/BUILD.gn
+
+          echo "----------2"
           # 把所有包含 java 的行删掉
           cp BUILD.gn BUILD.gn.bak
           grep -v "java" BUILD.gn.bak > BUILD.gn
 
+          echo "----------3"
           gn gen out/android-arm64 --args='
             target_os="android"
             target_cpu="arm64"
@@ -104,6 +110,7 @@ jobs:
             android_linkflags="-Wl,-z,max-page-size=16384"
           '
 
+          echo "----------4"
           ninja -C out/android-arm64
           
       # ✅ 9. 上传结果
