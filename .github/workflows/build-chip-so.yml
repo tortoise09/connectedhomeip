@@ -108,14 +108,11 @@ jobs:
 
             # 🔥 关键：关闭 Java/Kotlin（避免编译报错）
             matter_enable_java_compilation=false
-
-            # 🔥 避免复杂平台依赖
-            chip_device_platform="linux"
+            chip_device_platform="android"
             
             # 🔥 关键：关闭 Pigweed 相关
             chip_build_tests=false
             chip_build_fuzz_tests=false
-            pw_build_PIGWEED_CIPD_INSTALL=false
                           
             android_linkflags="-Wl,-z,max-page-size=16384"
           '
