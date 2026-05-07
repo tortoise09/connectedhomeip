@@ -80,32 +80,30 @@ jobs:
           mkdir -p build_overrides
           echo "# dummy pigweed env" > build_overrides/pigweed_environment.gni
 
-      - name: Patch Java rules
-        run: |
-          cd connectedhomeip
+      # - name: Patch Java rules
+      #   run: |
+      #     cd connectedhomeip
           
-          python3 - <<'PY'
-          from pathlib import Path
+      #     python3 - <<'PY'
+      #     from pathlib import Path
           
-          p = Path("build/chip/java/rules.gni")
+      #     p = Path("build/chip/java/rules.gni")
           
-          text = p.read_text()
+      #     text = p.read_text()
           
-          text = text.replace(
-          '''assert(android_sdk_root != "" || matter_enable_java_compilation,
-                 "android_sdk_root must be specified or JAVA_HOME must be set.")''',
-          '''assert(true)'''
-          )
+      #     text = text.replace(
+      #     '''assert(android_sdk_root != "" || matter_enable_java_compilation,
+      #            "android_sdk_root must be specified or JAVA_HOME must be set.")''',
+      #     '''assert(true)'''
+      #     )
           
-          p.write_text(text)
-          PY
+      #     p.write_text(text)
+      #     PY
 
-      - name: Dump all targets
+      - name: Check targets
         run: |
           cd connectedhomeip
-          gn ls out/android-arm64 > all_targets.txt
-          wc -l all_targets.txt
-          grep -Ei "jni|controller|android" all_targets.txt | head -100
+          gn ls out/android-arm64 | grep CHIPController
 
       # ✅ 8. 构建（无 Java / 无 CIPD）
       - name: Build CHIP SO
