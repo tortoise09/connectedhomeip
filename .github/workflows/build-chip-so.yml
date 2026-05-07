@@ -100,10 +100,12 @@ jobs:
           p.write_text(text)
           PY
 
-      - name: List targets
+      - name: Dump all targets
         run: |
           cd connectedhomeip
-          gn ls out/android-arm64 '//src/controller/java/*'
+          gn ls out/android-arm64 > all_targets.txt
+          wc -l all_targets.txt
+          grep -Ei "jni|controller|android" all_targets.txt | head -100
 
       # ✅ 8. 构建（无 Java / 无 CIPD）
       - name: Build CHIP SO
@@ -134,7 +136,7 @@ jobs:
             # is_component_build=true
           '
 
-          ninja -C out/android-arm64 '//src/controller/java:CHIPController'
+          ninja -C out/android-arm64
 
       - name: Find SO
         run: |
