@@ -100,21 +100,23 @@ jobs:
           p.write_text(text)
           PY
 
+      - name: List targets
+        run: |
+          cd connectedhomeip
+          gn ls out/android-arm64 //src/controller/java/*
+
       # ✅ 8. 构建（无 Java / 无 CIPD）
       - name: Build CHIP SO
         run: |
           cd connectedhomeip
 
-          echo "----------1"
           # 注释 assert
           sed -i 's/assert(android_sdk_root != "" || matter_enable_java_compilation,/if (false)/g' build/chip/java/rules.gni
 
-          echo "----------2"
           # 把所有包含 java 的行删掉
           cp BUILD.gn BUILD.gn.bak
           grep -v "java" BUILD.gn.bak > BUILD.gn
 
-          echo "----------3"
           gn gen out/android-arm64 --args='
             target_os="android"
             target_cpu="arm64"
@@ -129,11 +131,9 @@ jobs:
             # 🔥 关键：关闭 Pigweed 相关
             chip_build_tests=false
             chip_build_fuzz_tests=false
-
             is_component_build=true
           '
 
-          echo "----------4"
           ninja -C out/android-arm64 //src/controller/java:CHIPController
 
       - name: Find SO
