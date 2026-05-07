@@ -134,13 +134,14 @@ jobs:
           '
 
           echo "----------4"
-          ninja -C out/android-arm64
+          ninja -C out/android-arm64 //src/controller/java:CHIPController
 
       - name: Find SO
         run: |
           cd connectedhomeip
           echo "===== find so ====="
-          find out -name "*.so"
+          # find out -name "*.so"
+          find out -type f | grep -E '\.(so|a|jar)$'
           
       # ✅ 9. 上传结果
       - name: Upload SO
