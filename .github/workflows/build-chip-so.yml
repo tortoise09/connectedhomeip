@@ -129,8 +129,8 @@ jobs:
             # 🔥 关键：关闭 Pigweed 相关
             chip_build_tests=false
             chip_build_fuzz_tests=false
-                          
-            android_linkflags="-Wl,-z,max-page-size=16384"
+
+            is_component_build=true
           '
 
           echo "----------4"
