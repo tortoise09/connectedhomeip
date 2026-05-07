@@ -135,6 +135,12 @@ jobs:
 
           echo "----------4"
           ninja -C out/android-arm64
+
+      - name: Find SO
+        run: |
+          cd connectedhomeip
+          echo "===== find so ====="
+          find out -name "*.so"
           
       # ✅ 9. 上传结果
       - name: Upload SO
@@ -142,4 +148,4 @@ jobs:
         with:
           name: chip-so
           path: |
-            connectedhomeip/out/android-arm64/*.so
+            connectedhomeip/out/**/*.so
