@@ -108,6 +108,8 @@ jobs:
             chip_build_tests=false
             chip_build_fuzz_tests=false
             pw_build_PIGWEED_CIPD_INSTALL=false
+            
+            chip_device_platform="external"
               
             android_linkflags="-Wl,-z,max-page-size=16384"
           '
