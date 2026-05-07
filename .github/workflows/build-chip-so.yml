@@ -80,6 +80,26 @@ jobs:
           mkdir -p build_overrides
           echo "# dummy pigweed env" > build_overrides/pigweed_environment.gni
 
+      - name: Patch Java rules
+        run: |
+          cd connectedhomeip
+          
+          python3 - <<'PY'
+          from pathlib import Path
+          
+          p = Path("build/chip/java/rules.gni")
+          
+          text = p.read_text()
+          
+          text = text.replace(
+          '''assert(android_sdk_root != "" || matter_enable_java_compilation,
+                 "android_sdk_root must be specified or JAVA_HOME must be set.")''',
+          '''assert(true)'''
+          )
+          
+          p.write_text(text)
+          PY
+
       # ✅ 8. 构建（无 Java / 无 CIPD）
       - name: Build CHIP SO
         run: |
