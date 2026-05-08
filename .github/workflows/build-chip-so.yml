@@ -33,6 +33,12 @@ jobs:
             git submodule update --init --recursive
           fi
 
+      - name: Fetch Android deps
+        run: |
+          cd third_party/android_deps
+          chmod +x fetch_all.sh
+          ./fetch_all.sh
+
       # ✅ 2. 基础依赖（很快）
       - name: Install deps
         run: |
