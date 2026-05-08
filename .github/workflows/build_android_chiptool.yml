@@ -1,0 +1,120 @@
+name: Build Examples CHIP Android SO (Test)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    env:
+      CHIP_VERSION: v1.5.1.0
+      NDK_VERSION: 25.2.9519653
+      ANDROID_SDK_ROOT: /home/runner/android-sdk
+      ANDROID_PLATFORM: android-34
+      ANDROID_BUILD_TOOLS: 34.0.0
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ✅ 1. 缓存源码（含 submodule）
+      - name: Cache CHIP source
+        uses: actions/cache@v4
+        with:
+          path: connectedhomeip
+          key: chip-src-${{ env.CHIP_VERSION }}
+
+      - name: Clone CHIP (if needed)
+        run: |
+          if [ ! -d "connectedhomeip" ]; then
+            git clone https://github.com/project-chip/connectedhomeip.git
+            cd connectedhomeip
+            git checkout $CHIP_VERSION
+            git submodule update --init --recursive
+          fi
+
+      # ✅ 2. 基础依赖（很快）
+      - name: Install deps
+        run: |
+          sudo apt update
+          sudo apt install -y git gcc g++ ninja-build python3 python3-pip unzip curl
+
+      # ✅ 先装 JDK（必须在最前）
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          
+      # ✅ 4. Android SDK
+      - name: Setup Android SDK
+        run: |
+          mkdir -p $ANDROID_SDK_ROOT
+          yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager \
+            --sdk_root=$ANDROID_SDK_ROOT \
+            "platform-tools" \
+            "platforms;${ANDROID_PLATFORM}" \
+            "build-tools;${ANDROID_BUILD_TOOLS}" \
+            "ndk;${NDK_VERSION}"
+
+      - name: Fake Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+
+      # ✅ 5. 缓存 NDK（关键加速点）
+      - name: Cache Android NDK
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.ANDROID_HOME }}/ndk
+          key: android-ndk-${{ env.NDK_VERSION }}
+
+      - name: Install NDK (if needed)
+        run: |
+          if [ ! -d "$ANDROID_HOME/ndk/${NDK_VERSION}" ]; then
+            sdkmanager "ndk;${NDK_VERSION}"
+          fi
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/${NDK_VERSION}" >> $GITHUB_ENV
+
+      # ✅ 6. 安装 GN
+      - name: Install GN (prebuilt)
+        run: |
+          curl -L -o gn.zip https://chrome-infra-packages.appspot.com/dl/gn/gn/linux-amd64/+/latest
+          unzip gn.zip -d gn-bin
+          chmod +x gn-bin/gn
+          echo "$PWD/gn-bin" >> $GITHUB_PATH
+
+      - name: Disable Pigweed (stub file)
+        run: |
+          cd connectedhomeip
+          mkdir -p build_overrides
+          echo "# dummy pigweed env" > build_overrides/pigweed_environment.gni
+
+      - name: Fetch Android deps
+        run: |
+          export CHIP_ROOT=$GITHUB_WORKSPACE
+          export PW_PROJECT_ROOT=$GITHUB_WORKSPACE
+          python3 third_party/android_deps/set_up_android_deps.py
+          cd connectedhomeip/third_party/android_deps
+          chmod +x gradlew
+          ./gradlew setUpAndroidDeps
+          ls -R artifacts
+
+      - name: Build CHIPTool
+        run: |
+          cd connectedhomeip/examples/android/CHIPTool
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Find so
+        run: |
+          find connectedhomeip/examples/android/CHIPTool -name "*.so"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chip-so
+          path: |
+            connectedhomeip/examples/android/CHIPTool/app/build/**/arm64-v8a/*.so
+
+
+
+          
