@@ -138,43 +138,43 @@ jobs:
             # is_component_build=true
           '
 
-          ninja -C out/android-arm64 
+          ninja -C out/android-arm64 src/platform/android:java
           # CHIPController SetupPayloadParser
 
-      - name: Create SO
-        run: |
-          cd connectedhomeip
-          mkdir -p out/shared
-          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++ \
-            -shared \
-            -o out/shared/libCHIPController.so \
-            -Wl,--whole-archive \
-            out/android-arm64/lib/libCHIP.a \
-            -Wl,--no-whole-archive \
-            -llog \
-            -landroid \
-            -lz \
-            -lc++_shared
+      # - name: Create SO
+      #   run: |
+      #     cd connectedhomeip
+      #     mkdir -p out/shared
+      #     $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++ \
+      #       -shared \
+      #       -o out/shared/libCHIPController.so \
+      #       -Wl,--whole-archive \
+      #       out/android-arm64/lib/libCHIP.a \
+      #       -Wl,--no-whole-archive \
+      #       -llog \
+      #       -landroid \
+      #       -lz \
+      #       -lc++_shared
 
-      - name: Copy libc++
-        run: |
-          cp \
-          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so \
-          connectedhomeip/out/shared/
+      # - name: Copy libc++
+      #   run: |
+      #     cp \
+      #     $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so \
+      #     connectedhomeip/out/shared/
 
-      - name: Create SetupPayloadParser SO
-        run: |
-          cd connectedhomeip
-          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++ \
-            -shared \
-            -o out/shared/libSetupPayloadParser.so \
-            -Wl,--whole-archive \
-            out/android-arm64/obj/src/setup_payload/lib/libSetupPayload.a \
-            -Wl,--no-whole-archive \
-            -llog \
-            -landroid \
-            -lz \
-            -lc++_shared
+      # - name: Create SetupPayloadParser SO
+      #   run: |
+      #     cd connectedhomeip
+      #     $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++ \
+      #       -shared \
+      #       -o out/shared/libSetupPayloadParser.so \
+      #       -Wl,--whole-archive \
+      #       out/android-arm64/obj/src/setup_payload/lib/libSetupPayload.a \
+      #       -Wl,--no-whole-archive \
+      #       -llog \
+      #       -landroid \
+      #       -lz \
+      #       -lc++_shared
 
       - name: Find SO
         run: |
@@ -188,4 +188,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: chip-so
-          path: connectedhomeip/out/shared/*
+          path: connectedhomeip/out/*
