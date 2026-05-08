@@ -35,6 +35,8 @@ jobs:
 
       - name: Fetch Android deps
         run: |
+          export CHIP_ROOT=$GITHUB_WORKSPACE
+          export PW_PROJECT_ROOT=$GITHUB_WORKSPACE
           python3 third_party/android_deps/set_up_android_deps.py
 
       # ✅ 2. 基础依赖（很快）
