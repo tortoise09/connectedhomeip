@@ -141,6 +141,41 @@ jobs:
           ninja -C out/android-arm64 
           # CHIPController SetupPayloadParser
 
+      - name: Create SO
+        run: |
+          cd connectedhomeip
+          mkdir -p out/shared
+          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++ \
+            -shared \
+            -o out/shared/libCHIPController.so \
+            -Wl,--whole-archive \
+            out/android-arm64/lib/libCHIP.a \
+            -Wl,--no-whole-archive \
+            -llog \
+            -landroid \
+            -lz \
+            -lc++_shared
+
+      - name: Copy libc++
+        run: |
+          cp \
+          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so \
+          connectedhomeip/out/shared/
+
+      - name: Create SetupPayloadParser SO
+        run: |
+          cd connectedhomeip
+          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++ \
+            -shared \
+            -o out/shared/libSetupPayloadParser.so \
+            -Wl,--whole-archive \
+            out/android-arm64/obj/src/setup_payload/lib/libSetupPayload.a \
+            -Wl,--no-whole-archive \
+            -llog \
+            -landroid \
+            -lz \
+            -lc++_shared
+
       - name: Find SO
         run: |
           cd connectedhomeip
@@ -153,7 +188,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: chip-so
-          path: |
-            connectedhomeip/out/android-arm64/lib/jni/arm64-v8a/libCHIPController.so
-            connectedhomeip/out/android-arm64/lib/jni/arm64-v8a/libSetupPayloadParser.so
-            connectedhomeip/out/android-arm64/lib/jni/arm64-v8a/libc++_shared.so
+          path: connectedhomeip/out/shared/*
