@@ -27,8 +27,10 @@ jobs:
       - name: Clone CHIP (if needed)
         run: |
           if [ ! -d "connectedhomeip" ]; then
+            cd /home/runner/work/
+            rm -r connectedhomeip
             git clone https://github.com/project-chip/connectedhomeip.git
-            cd connectedhomeip
+            cd /home/runner/work/connectedhomeip
             git checkout $CHIP_VERSION
             git submodule update --init --recursive
           fi
