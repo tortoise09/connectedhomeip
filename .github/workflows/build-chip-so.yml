@@ -35,9 +35,7 @@ jobs:
 
       - name: Fetch Android deps
         run: |
-          cd third_party/android_deps
-          chmod +x fetch_all.sh
-          ./fetch_all.sh
+          python3 third_party/android_deps/set_up_android_deps.py
 
       # ✅ 2. 基础依赖（很快）
       - name: Install deps
