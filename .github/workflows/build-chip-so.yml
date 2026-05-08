@@ -105,6 +105,7 @@ jobs:
           cd connectedhomeip
           gn ls out/android-arm64 "//src/controller/java/*" || true
           gn ls out/android-arm64 "//src/platform/android/*" || true
+          gn ls out/android-arm64 "//examples/android/*"
 
       # ✅ 8. 构建（无 Java / 无 CIPD）
       - name: Build CHIP SO
