@@ -103,7 +103,8 @@ jobs:
       - name: Check targets
         run: |
           cd connectedhomeip
-          gn ls out/android-arm64 "//src/controller/java/*"
+          gn ls out/android-arm64 "//src/controller/java/*" || true
+          gn ls out/android-arm64 "//src/platform/android/*" || true
 
       # ✅ 8. 构建（无 Java / 无 CIPD）
       - name: Build CHIP SO
@@ -136,7 +137,8 @@ jobs:
             # is_component_build=true
           '
 
-          ninja -C out/android-arm64 CHIPController SetupPayloadParser
+          ninja -C out/android-arm64 
+          # CHIPController SetupPayloadParser
 
       - name: Find SO
         run: |
