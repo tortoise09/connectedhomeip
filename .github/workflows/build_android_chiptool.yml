@@ -6,16 +6,68 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    
+    env:
+      NDK_VERSION: 28.2.13676358
+      ANDROID_SDK_ROOT: /home/runner/android-sdk
+      ANDROID_PLATFORM: android-34
+      ANDROID_BUILD_TOOLS: 34.0.0
 
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Install deps
+        run: |
+          sudo apt update
+          sudo apt install -y git gcc g++ ninja-build python3 python3-pip unzip curl
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        run: |
+          mkdir -p $ANDROID_SDK_ROOT
+          yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager \
+            --sdk_root=$ANDROID_SDK_ROOT \
+            "platform-tools" \
+            "platforms;${ANDROID_PLATFORM}" \
+            "build-tools;${ANDROID_BUILD_TOOLS}" \
+            "ndk;${NDK_VERSION}"
+
+      - name: Fake Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+
+      - name: Install NDK (if needed)
+        run: |
+          if [ ! -d "$ANDROID_HOME/ndk/${NDK_VERSION}" ]; then
+            sdkmanager "ndk;${NDK_VERSION}"
+          fi
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/${NDK_VERSION}" >> $GITHUB_ENV
+
+      - name: Install GN (prebuilt)
+        run: |
+          curl -L -o gn.zip https://chrome-infra-packages.appspot.com/dl/gn/gn/linux-amd64/+/latest
+          unzip gn.zip -d gn-bin
+          chmod +x gn-bin/gn
+          echo "$PWD/gn-bin" >> $GITHUB_PATH
     
       - name: Fetch Android deps
+        env:
+          PW_PROJECT_ROOT: ${{ github.workspace }}
+          CHIP_ROOT: ${{ github.workspace }}
         run: |
           cd $GITHUB_WORKSPACE
           python3 third_party/android_deps/set_up_android_deps.py
+          cd third_party/android_deps
+          chmod +x gradlew
+          ./gradlew setUpAndroidDeps
+          ls -R artifacts
       
       - name: Build CHIPTool
         run: |
