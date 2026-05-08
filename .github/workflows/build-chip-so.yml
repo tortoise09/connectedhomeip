@@ -14,12 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ✅ 1. 缓存源码（含 submodule）
-      - name: Cache CHIP source
-        uses: actions/cache@v4
-        with:
-          path: connectedhomeip
-          key: chip-src-${{ env.CHIP_VERSION }}
+      # # ✅ 1. 缓存源码（含 submodule）
+      # - name: Cache CHIP source
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: connectedhomeip
+      #     key: chip-src-${{ env.CHIP_VERSION }}
 
       - name: Clone CHIP (if needed)
         run: |
@@ -28,6 +28,8 @@ jobs:
             cd connectedhomeip
             git checkout $CHIP_VERSION
             git submodule update --init --recursive
+
+            python3 scripts/checkout_submodules.py --platform android
           fi
 
       # ✅ 2. 基础依赖（很快）
