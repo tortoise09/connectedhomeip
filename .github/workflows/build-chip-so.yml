@@ -33,12 +33,6 @@ jobs:
             git submodule update --init --recursive
           fi
 
-      - name: Fetch Android deps
-        run: |
-          export CHIP_ROOT=$GITHUB_WORKSPACE
-          export PW_PROJECT_ROOT=$GITHUB_WORKSPACE
-          python3 third_party/android_deps/set_up_android_deps.py
-
       # ✅ 2. 基础依赖（很快）
       - name: Install deps
         run: |
@@ -94,6 +88,12 @@ jobs:
           cd connectedhomeip
           mkdir -p build_overrides
           echo "# dummy pigweed env" > build_overrides/pigweed_environment.gni
+
+      - name: Fetch Android deps
+        run: |
+          export CHIP_ROOT=$GITHUB_WORKSPACE
+          export PW_PROJECT_ROOT=$GITHUB_WORKSPACE
+          python3 third_party/android_deps/set_up_android_deps.py
 
       # - name: Patch Java rules
       #   run: |
