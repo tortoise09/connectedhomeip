@@ -68,11 +68,20 @@ jobs:
           chmod +x gradlew
           ./gradlew setUpAndroidDeps
           ls -R artifacts
+
+      - name: Install minimal Python deps
+        run: |
+          python3 -m pip install "pip<24"
+          pip3 install \
+            click \
+            coloredlogs \
+            jinja2 \
+            pyyaml \
+            requests
       
       - name: Build CHIPTool
         run: |
           cd $GITHUB_WORKSPACE
-          source scripts/bootstrap.sh
           python3 scripts/build/build_examples.py --target android-arm64-chip-tool build
 
       - name: Find so
