@@ -67,17 +67,17 @@ jobs:
           chmod +x gn-bin/gn
           echo "$PWD/gn-bin" >> $GITHUB_PATH
     
-      - name: Fetch Android deps
-        env:
-          PW_PROJECT_ROOT: ${{ github.workspace }}
-          CHIP_ROOT: ${{ github.workspace }}
-        run: |
-          cd $GITHUB_WORKSPACE
-          python third_party/android_deps/set_up_android_deps.py
-          cd third_party/android_deps
-          chmod +x gradlew
-          ./gradlew setUpAndroidDeps
-          ls -R artifacts
+      # - name: Fetch Android deps
+      #   env:
+      #     PW_PROJECT_ROOT: ${{ github.workspace }}
+      #     CHIP_ROOT: ${{ github.workspace }}
+      #   run: |
+      #     cd $GITHUB_WORKSPACE
+      #     python third_party/android_deps/set_up_android_deps.py
+      #     cd third_party/android_deps
+      #     chmod +x gradlew
+      #     ./gradlew setUpAndroidDeps
+      #     ls -R artifacts
 
       - name: Install minimal Python deps
         run: |
@@ -116,17 +116,21 @@ jobs:
           echo $PW_PROJECT_ROOT
           echo $CHIP_ROOT
           cd $GITHUB_WORKSPACE
+
+          source scripts/bootstrap.sh
+          source scripts/activate.sh
+          
           python scripts/build/build_examples.py --target android-arm64-chip-tool build
 
       - name: Find so
         run: |
           find . -name "*.so"
      
-      - uses: actions/upload-artifact@v4
-        with:
-          name: chip-so
-          path: |
-            ${{ github.workspace }}/examples/android/CHIPTool/app/build/**/arm64-v8a/*.so
+      # - uses: actions/upload-artifact@v4
+      #   with:
+      #     name: chip-so
+      #     path: |
+      #       ${{ github.workspace }}/examples/android/CHIPTool/app/build/**/arm64-v8a/*.so
 
 
           
