@@ -91,6 +91,9 @@ jobs:
       
       - name: Build CHIPTool
         run: |
+          echo "PW_PROJECT_ROOT=$GITHUB_WORKSPACE/connectedhomeip" >> $GITHUB_ENV
+          echo "CHIP_ROOT=$GITHUB_WORKSPACE/connectedhomeip" >> $GITHUB_ENV
+          
           cd $GITHUB_WORKSPACE
           python scripts/build/build_examples.py --target android-arm64-chip-tool build
 
