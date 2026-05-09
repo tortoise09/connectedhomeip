@@ -68,6 +68,12 @@ jobs:
           chmod +x gradlew
           ./gradlew setUpAndroidDeps
           ls -R artifacts
+
+      - name: List gradle tasks
+        run: |
+          cd $GITHUB_WORKSPACE/examples/android/CHIPTool
+          chmod +x gradlew
+          ./gradlew tasks --all
       
       - name: Build CHIPTool
         run: |
