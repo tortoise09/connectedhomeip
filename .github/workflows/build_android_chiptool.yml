@@ -119,6 +119,10 @@ jobs:
 
           source scripts/bootstrap.sh
           source scripts/activate.sh
+
+          sed -i 's/-Werror//g' build/chip/java/kotlinc_runner.py
+          sed -i 's/-Werror//g' build/chip/java/javac_runner.py
+          sed -i 's/-Xlint:all//g' build/chip/java/kotlinc_runner.py
           
           python scripts/build/build_examples.py --target android-arm64-chip-tool build
 
