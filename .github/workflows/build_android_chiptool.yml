@@ -107,6 +107,15 @@ jobs:
       - name: Export LDFLAGS
         run: |
           echo 'LDFLAGS=-Wl,-z,max-page-size=16384' >> $GITHUB_ENV
+
+      - name: Remove Kotlin Werror
+        run: |
+          cd $GITHUB_WORKSPACE
+          grep -R "-Werror" build src | head
+          find build src -type f \( -name "*.gni" -o -name "*.gn" -o -name "*.py" \) \
+            -exec sed -i 's/"-Werror",//g' {} \;
+          find build src -type f \( -name "*.gni" -o -name "*.gn" -o -name "*.py" \) \
+            -exec sed -i 's/"-Xlint:all",//g' {} \;
       
       - name: Build CHIPTool
         env:
@@ -119,10 +128,6 @@ jobs:
 
           source scripts/bootstrap.sh
           source scripts/activate.sh
-
-          sed -i 's/-Werror//g' build/chip/java/kotlinc_runner.py
-          sed -i 's/-Werror//g' build/chip/java/javac_runner.py
-          sed -i 's/-Xlint:all//g' build/chip/java/kotlinc_runner.py
           
           python scripts/build/build_examples.py --target android-arm64-chip-tool build
 
