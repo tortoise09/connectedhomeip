@@ -68,22 +68,16 @@ jobs:
           chmod +x gradlew
           ./gradlew setUpAndroidDeps
           ls -R artifacts
-
-      - name: List gradle tasks
-        run: |
-          cd $GITHUB_WORKSPACE/examples/android/CHIPTool
-          chmod +x gradlew
-          ./gradlew tasks --all
       
       - name: Build CHIPTool
         run: |
-          cd $GITHUB_WORKSPACE/examples/android/CHIPTool
-          chmod +x gradlew
-          ./gradlew :app:buildChipLib
+          cd $GITHUB_WORKSPACE
+          source scripts/bootstrap.sh
+          python3 scripts/build/build_examples.py --target android-arm64-chip-tool build
 
       - name: Find so
         run: |
-          find $GITHUB_WORKSPACE/examples/android/CHIPTool -name "*.so"
+          find . -name "*.so"
      
       - uses: actions/upload-artifact@v4
         with:
