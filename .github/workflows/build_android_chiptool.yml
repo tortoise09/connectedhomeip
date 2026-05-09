@@ -117,14 +117,14 @@ jobs:
           find build src -type f \( -name "*.gni" -o -name "*.gn" -o -name "*.py" \) \
             -exec sed -i 's/"-Xlint:all",//g' {} \;
 
-      - name: Patch Kotlin Version
+      - name: Patch Kotlin
         run: |
           cd $GITHUB_WORKSPACE/examples/android/CHIPTool
-      
-          sed -i 's/1.9.*/2.2.0/g' build.gradle.kts || true
-          sed -i 's/2.0.*/2.2.0/g' build.gradle.kts || true
-      
-          grep -R "kotlin" .
+          find . -type f \( -name "*.gradle" -o -name "*.gradle.kts" -o -name "*.toml" \) \
+            -exec sed -i 's/2\.1\.0/2.3.0/g' {} +
+          find . -type f \( -name "*.gradle" -o -name "*.gradle.kts" -o -name "*.toml" \) \
+            -exec sed -i 's/2\.0\.21/2.3.0/g' {} +
+          grep -R "2.3.0" .
       
       - name: Build CHIPTool
         env:
