@@ -91,8 +91,8 @@ jobs:
       
       - name: Build CHIPTool
         env:
-          PW_PROJECT_ROOT: ${{ github.workspace }}/connectedhomeip
-          CHIP_ROOT: ${{ github.workspace }}/connectedhomeip
+          PW_PROJECT_ROOT: ${{ github.workspace }}
+          CHIP_ROOT: ${{ github.workspace }}
         run: |
           echo $PW_PROJECT_ROOT
           echo $CHIP_ROOT
