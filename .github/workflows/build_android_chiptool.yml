@@ -88,6 +88,19 @@ jobs:
             jinja2 \
             pyyaml \
             requests
+
+      - name: Create Pigweed override
+        run: |
+          cd $GITHUB_WORKSPACE
+          mkdir -p build_overrides
+          cat > build_overrides/pigweed_environment.gni <<EOF
+          pw_env_setup_CIPD_INSTALL_DIR = ""
+          EOF
+          ls -l build_overrides
+
+      - name: Export LDFLAGS
+        run: |
+          echo 'LDFLAGS=-Wl,-z,max-page-size=16384' >> $GITHUB_ENV
       
       - name: Build CHIPTool
         env:
