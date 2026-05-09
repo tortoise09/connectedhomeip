@@ -23,6 +23,16 @@ jobs:
           sudo apt update
           sudo apt install -y git gcc g++ ninja-build python3 python3-pip unzip curl
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Check Python
+        run: |
+          which python
+          python --version
+
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
@@ -63,7 +73,7 @@ jobs:
           CHIP_ROOT: ${{ github.workspace }}
         run: |
           cd $GITHUB_WORKSPACE
-          python3 third_party/android_deps/set_up_android_deps.py
+          python third_party/android_deps/set_up_android_deps.py
           cd third_party/android_deps
           chmod +x gradlew
           ./gradlew setUpAndroidDeps
@@ -71,8 +81,8 @@ jobs:
 
       - name: Install minimal Python deps
         run: |
-          python3 -m pip install "pip<24"
-          pip3 install \
+          python -m pip install "pip<24"
+          pip install \
             click \
             coloredlogs \
             jinja2 \
@@ -82,7 +92,7 @@ jobs:
       - name: Build CHIPTool
         run: |
           cd $GITHUB_WORKSPACE
-          python3 scripts/build/build_examples.py --target android-arm64-chip-tool build
+          python scripts/build/build_examples.py --target android-arm64-chip-tool build
 
       - name: Find so
         run: |
