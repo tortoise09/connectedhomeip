@@ -150,11 +150,10 @@ jobs:
         run: |
           find . -name "*.so"
      
-      # - uses: actions/upload-artifact@v4
-      #   with:
-      #     name: chip-so
-      #     path: |
-      #       ${{ github.workspace }}/examples/android/CHIPTool/app/build/**/arm64-v8a/*.so
-
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chip-so
+          path: |
+            ${{ github.workspace }}/examples/android/CHIPTool/app/libs/jniLibs/**/*.so
 
           
