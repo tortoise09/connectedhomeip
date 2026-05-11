@@ -1,0 +1,146 @@
+name: Build Matter Android SDK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    
+    env:
+      NDK_VERSION: 28.2.13676358
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      ANDROID_PLATFORM: android-34
+      ANDROID_BUILD_TOOLS: 34.0.0
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup JDK17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install Dependencies
+        run: |
+          sudo apt update
+
+          sudo apt install -y \
+            ninja-build \
+            build-essential \
+            clang \
+            lld \
+            libc6-dev \
+            git \
+            unzip \
+            curl \
+            zip
+      
+      - name: Setup Android SDK
+        run: |
+          mkdir -p $ANDROID_SDK_ROOT
+          yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager \
+            --sdk_root=$ANDROID_SDK_ROOT \
+            "platform-tools" \
+            "platforms;${ANDROID_PLATFORM}" \
+            "build-tools;${ANDROID_BUILD_TOOLS}" \
+            "ndk;${NDK_VERSION}"
+
+      - name: Fake Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+
+      - name: Setup Kotlin
+        run: |
+          wget https://github.com/JetBrains/kotlin/releases/download/v2.1.0/kotlin-compiler-2.1.0.zip
+          unzip kotlin-compiler-2.1.0.zip -d kotlin
+          echo "$PWD/kotlin/kotlinc/bin" >> $GITHUB_PATH
+          kotlinc -version
+
+      - name: Install NDK (if needed)
+        run: |
+          if [ ! -d "$ANDROID_HOME/ndk/${NDK_VERSION}" ]; then
+            sdkmanager "ndk;${NDK_VERSION}"
+          fi
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/${NDK_VERSION}" >> $GITHUB_ENV
+
+      - name: Install GN (prebuilt)
+        run: |
+          curl -L -o gn.zip https://chrome-infra-packages.appspot.com/dl/gn/gn/linux-amd64/+/latest
+          unzip gn.zip -d gn-bin
+          chmod +x gn-bin/gn
+          echo "$PWD/gn-bin" >> $GITHUB_PATH
+
+      - name: Create Pigweed override
+        run: |
+          cd $GITHUB_WORKSPACE
+          mkdir -p build_overrides
+          cat > build_overrides/pigweed_environment.gni <<EOF
+          pw_env_setup_CIPD_INSTALL_DIR = ""
+          EOF
+          ls -l build_overrides
+
+      - name: Export LDFLAGS
+        run: |
+          echo 'LDFLAGS=-Wl,-z,max-page-size=16384' >> $GITHUB_ENV
+
+      - name: Remove Kotlin Werror
+        run: |
+          cd $GITHUB_WORKSPACE
+          grep -R "-Werror" build src | head
+          find build src -type f \( -name "*.gni" -o -name "*.gn" -o -name "*.py" \) \
+            -exec sed -i 's/"-Werror",//g' {} \;
+          find build src -type f \( -name "*.gni" -o -name "*.gn" -o -name "*.py" \) \
+            -exec sed -i 's/"-Xlint:all",//g' {} \;
+
+      - name: Build Android ARM64
+        run: |
+          source scripts/activate.sh
+          ./scripts/build/build_examples.py \
+          --target android-arm64-chip-tool build
+
+      - name: Build Android ARMv7
+        run: |
+          source scripts/activate.sh
+          ./scripts/build/build_examples.py \
+          --target android-arm-chip-tool build
+
+      - name: Build CHIPTool APK
+        run: |
+          source scripts/activate.sh
+
+          cd examples/android/CHIPTool
+
+          ./gradlew \
+          assembleDebug \
+          -Pkotlin.compiler.execution.strategy=in-process
+
+      - name: Collect SDK
+        run: |
+          mkdir -p sdk/jni/arm64-v8a
+          mkdir -p sdk/jni/armeabi-v7a
+          mkdir -p sdk/libs
+
+          # ARM64
+          cp out/android-arm64-chip-tool/lib/jni/arm64-v8a/*.so \
+          sdk/jni/arm64-v8a/ || true
+          # ARMv7
+          cp out/android-arm-chip-tool/lib/jni/armeabi-v7a/*.so \
+          sdk/jni/armeabi-v7a/ || true
+          # jars
+          find out -name "*.jar" -exec cp {} sdk/libs/ \;
+
+      - name: Upload SDK
+        uses: actions/upload-artifact@v4
+        with:
+          name: matter-android-sdk
+          path: sdk
